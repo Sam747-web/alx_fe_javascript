@@ -115,3 +115,71 @@ function importFromJsonFile(event) {
     fileReader.readAsText(event.target.files[0]);
   }
   
+  function populateCategories() {
+    const categoryFilter = document.getElementById("categoryFilter");
+    categoryFilter.innerHTML = '<option value="all">All Categories</option>'; // Reset options
+
+    const categories = [...new Set(quotes.map(quote => quote.category))]; // Extract unique categories
+
+    categories.forEach(category => {
+        let option = document.createElement("option");
+        option.value = category;
+        option.textContent = category;
+        categoryFilter.appendChild(option);
+    });
+
+    // Restore last selected filter
+    const lastFilter = localStorage.getItem("selectedCategory");
+    if (lastFilter) {
+        categoryFilter.value = lastFilter;
+        filterQuotes();
+    }
+}
+
+function filterQuotes() {
+    const selectedCategory = document.getElementById("categoryFilter").value;
+    localStorage.setItem("selectedCategory", selectedCategory); // Save filter preference
+
+    const quoteDisplay = document.getElementById("quoteDisplay");
+    quoteDisplay.innerHTML = ""; // Clear existing quotes
+
+    const filteredQuotes = (selectedCategory === "all") ? quotes : quotes.filter(q => q.category === selectedCategory);
+
+    filteredQuotes.forEach(quote => {
+        let quoteElement = document.createElement("p");
+        quoteElement.textContent = `"${quote.text}" - ${quote.category}`;
+        quoteDisplay.appendChild(quoteElement);
+    });
+}
+
+function addQuote() {
+    const newQuoteText = document.getElementById("newQuoteText").value.trim();
+    const newQuoteCategory = document.getElementById("newQuoteCategory").value.trim();
+
+    if (newQuoteText && newQuoteCategory) {
+        quotes.push({ text: newQuoteText, category: newQuoteCategory });
+        saveQuotes();
+        populateCategories(); // Update category dropdown
+        filterQuotes(); // Refresh displayed quotes
+    } else {
+        alert("Please enter both a quote and a category.");
+    }
+}
+
+function saveQuotes() {
+    localStorage.setItem("quotes", JSON.stringify(quotes));
+}
+
+function loadQuotes() {
+    const storedQuotes = localStorage.getItem("quotes");
+    quotes = storedQuotes ? JSON.parse(storedQuotes) : [
+        { text: "The only way to do great work is to love what you do.", category: "Motivation" },
+        { text: "Success is not final, failure is not fatal: It is the courage to continue that counts.", category: "Success" },
+    ];
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadQuotes();
+    populateCategories();
+    filterQuotes(); // Apply last filter on load
+});
