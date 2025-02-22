@@ -183,3 +183,64 @@ document.addEventListener("DOMContentLoaded", () => {
     populateCategories();
     filterQuotes(); // Apply last filter on load
 });
+const SERVER_URL = "https://jsonplaceholder.typicode.com/posts"; // Replace with actual API if available
+
+async function fetchQuotesFromServer() {
+    try {
+        let response = await fetch(SERVER_URL);
+        let serverQuotes = await response.json();
+
+        // Extract relevant data (mock API might return unnecessary fields)
+        let formattedQuotes = serverQuotes.map(q => ({
+            text: q.title,  // Using 'title' as a mock quote
+            category: "General"
+        }));
+
+        // Merge server quotes with local quotes
+        mergeQuotes(formattedQuotes);
+    } catch (error) {
+        console.error("Error fetching quotes:", error);
+    }
+}
+function mergeQuotes(serverQuotes) {
+    let localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
+
+    // Avoid duplicate quotes (compare text values)
+    serverQuotes.forEach(serverQuote => {
+        if (!localQuotes.some(localQuote => localQuote.text === serverQuote.text)) {
+            localQuotes.push(serverQuote);
+        }
+    });
+
+    localStorage.setItem("quotes", JSON.stringify(localQuotes));
+    populateCategories();
+    filterQuotes();
+}
+setInterval(fetchQuotesFromServer, 30000); // Fetch new quotes every 30 seconds
+
+function mergeQuotes(serverQuotes) {
+    let localQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
+    let newQuotes = [];
+
+    serverQuotes.forEach(serverQuote => {
+        if (!localQuotes.some(localQuote => localQuote.text === serverQuote.text)) {
+            localQuotes.push(serverQuote);
+            newQuotes.push(serverQuote);
+        }
+    });
+
+    localStorage.setItem("quotes", JSON.stringify(localQuotes));
+    populateCategories();
+    filterQuotes();
+
+    if (newQuotes.length > 0) {
+        alert(`📢 ${newQuotes.length} new quotes added from the server!`);
+    }
+}
+function resolveConflicts(localQuote, serverQuote) {
+    let userChoice = confirm(
+        `Conflict detected! Local: "${localQuote.text}"\nServer: "${serverQuote.text}"\nKeep server version?`
+    );
+
+    return userChoice ? serverQuote : localQuote;
+}
