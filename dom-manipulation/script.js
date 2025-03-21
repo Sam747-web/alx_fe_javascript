@@ -1,126 +1,58 @@
-// Load quotes from local storage or initialize default quotes
-let quotes = JSON.parse(localStorage.getItem("quotes")) || [
-    { text: "Believe you can and you're halfway there.", category: "Motivation" },
-    { text: "Success is not final, failure is not fatal.", category: "Success" },
-    { text: "Don't watch the clock; do what it does. Keep going.", category: "Time" },
-];
-
-let selectedCategory = localStorage.getItem("selectedCategory") || "all";
-
-// Function to save quotes to local storage
-function saveQuotes() {
-    localStorage.setItem("quotes", JSON.stringify(quotes));
-}
-
-// ✅ Fix: Ensure the populateCategories function exists and works properly
-function populateCategories() {
-    const categorySet = new Set(["all"]); // Ensure 'All Categories' exists
-    quotes.forEach(quote => categorySet.add(quote.category));
-
-    const categoryFilter = document.getElementById("categoryFilter");
-    categoryFilter.innerHTML = ""; // Clear existing options
-
-    categorySet.forEach(category => {
-        const option = document.createElement("option");
-        option.value = category;
-        option.textContent = category;
-        categoryFilter.appendChild(option);
-    });
-
-    // ✅ Fix: Restore last selected category from localStorage
-    categoryFilter.value = selectedCategory;
-}
-
-// ✅ Fix: Ensure the filterQuotes function exists
-function filterQuotes() {
-    selectedCategory = document.getElementById("categoryFilter").value;
-    localStorage.setItem("selectedCategory", selectedCategory); // ✅ Save selected category
-    displayFilteredQuotes();
-}
-
-// ✅ Fix: Implement logic to filter and update displayed quotes
-function displayFilteredQuotes() {
-    let filteredQuotes = quotes;
-    if (selectedCategory !== "all") {
-        filteredQuotes = quotes.filter(q => q.category === selectedCategory);
+// Fetch quotes from a mock server and update local storage
+async function fetchQuotesFromServer() {
+    try {
+        let response = await fetch('https://jsonplaceholder.typicode.com/posts'); // Replace with actual API
+        let quotes = await response.json();
+        localStorage.setItem('quotes', JSON.stringify(quotes));
+        return quotes;
+    } catch (error) {
+        console.error('Error fetching quotes:', error);
     }
+}
 
-    if (filteredQuotes.length === 0) {
-        document.getElementById("quoteDisplay").innerText = "No quotes available for this category.";
-        return;
+// Post a new quote to the mock server
+async function postQuoteToServer(quote) {
+    try {
+        let response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(quote)
+        });
+        let data = await response.json();
+        console.log('Quote posted:', data);
+    } catch (error) {
+        console.error('Error posting quote:', error);
     }
-
-    const randomIndex = Math.floor(Math.random() * filteredQuotes.length);
-    const quote = filteredQuotes[randomIndex];
-
-    document.getElementById("quoteDisplay").innerText = `"${quote.text}" - [${quote.category}]`;
 }
 
-// ✅ Fix: Save category when adding new quotes
-function addQuote() {
-    const quoteText = document.getElementById("newQuoteText").value.trim();
-    const quoteCategory = document.getElementById("newQuoteCategory").value.trim();
-
-    if (quoteText === "" || quoteCategory === "") {
-        alert("Please enter both a quote and a category.");
-        return;
-    }
-
-    quotes.push({ text: quoteText, category: quoteCategory });
-
-    saveQuotes();
-    populateCategories();
-
-    document.getElementById("newQuoteText").value = "";
-    document.getElementById("newQuoteCategory").value = "";
-
-    alert("New quote added successfully!");
+// Sync quotes between local storage and server
+async function syncQuotes() {
+    let localQuotes = JSON.parse(localStorage.getItem('quotes')) || [];
+    let serverQuotes = await fetchQuotesFromServer();
+    
+    if (!serverQuotes) return;
+    
+    // Merge quotes: server takes precedence
+    let mergedQuotes = [...serverQuotes, ...localQuotes.filter(lq => !serverQuotes.some(sq => sq.id === lq.id))];
+    localStorage.setItem('quotes', JSON.stringify(mergedQuotes));
+    console.log('Quotes synced successfully.');
+    showConflictNotification();
 }
 
-// ✅ Fix: Ensure JSON Export/Import works correctly
-function exportToJsonFile() {
-    const dataStr = JSON.stringify(quotes, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
+// Periodically check for new quotes from the server
+setInterval(syncQuotes, 60000); // Fetch updates every 60 seconds
 
-    const downloadLink = document.createElement("a");
-    downloadLink.href = url;
-    downloadLink.download = "quotes.json";
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
+// UI notification for conflicts
+function showConflictNotification() {
+    let notification = document.createElement('div');
+    notification.innerText = "Data conflict resolved using server data.";
+    notification.style.position = "fixed";
+    notification.style.top = "10px";
+    notification.style.right = "10px";
+    notification.style.background = "red";
+    notification.style.color = "white";
+    notification.style.padding = "10px";
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.remove(), 5000);
 }
-
-function importFromJsonFile(event) {
-    const fileReader = new FileReader();
-
-    fileReader.onload = function(event) {
-        try {
-            const importedQuotes = JSON.parse(event.target.result);
-
-            if (!Array.isArray(importedQuotes)) {
-                alert("Invalid JSON format. Expected an array of quotes.");
-                return;
-            }
-
-            quotes.push(...importedQuotes);
-            saveQuotes();
-            populateCategories();
-            alert("Quotes imported successfully!");
-        } catch (error) {
-            alert("Error parsing JSON file.");
-        }
-    };
-
-    fileReader.readAsText(event.target.files[0]);
-}
-
-// ✅ Fix: Load last viewed category when the page loads
-document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("newQuote").addEventListener("click", displayFilteredQuotes);
-    document.getElementById("exportQuotes").addEventListener("click", exportToJsonFile);
-    document.getElementById("importFile").addEventListener("change", importFromJsonFile);
-
-    populateCategories();
-    filterQuotes();
-});
