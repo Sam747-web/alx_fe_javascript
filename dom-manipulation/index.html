@@ -15,7 +15,13 @@
     <div>
         <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
         <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
-        <button id="addQuoteButton">Add Quote</button>
+        <button id="addQuoteButton" onclick="addQuote()">Add Quote</button>
+    </div>
+
+    <!-- Import & Export -->
+    <div>
+        <button id="exportQuotes">Export Quotes</button>
+        <input type="file" id="importFile" accept=".json" />
     </div>
 
     <script src="script.js"></script>
