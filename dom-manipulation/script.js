@@ -7,7 +7,7 @@ const quotes = [
 ];
 
 // Function to display a random quote
-function showRandomQuote() {
+function displayRandomQuote() {
     if (quotes.length === 0) {
         document.getElementById("quoteDisplay").innerText = "No quotes available.";
         return;
@@ -15,6 +15,10 @@ function showRandomQuote() {
     const randomIndex = Math.floor(Math.random() * quotes.length);
     const quote = quotes[randomIndex];
     document.getElementById("quoteDisplay").innerText = `"${quote.text}" - [${quote.category}]`;
+}
+
+// Ensure the button uses the correct function
+document.getElementById("newQuote").addEventListener("click", displayRandomQuote);
 }
 
 // Function to add a new quote dynamically
@@ -26,6 +30,12 @@ function addQuote() {
         alert("Please enter both a quote and a category.");
         return;
     }
+
+    quotes.push({ text: quoteText, category: quoteCategory });
+    document.getElementById("newQuoteText").value = "";
+    document.getElementById("newQuoteCategory").value = "";
+}
+
 
     // Add new quote to array
     quotes.push({ text: quoteText, category: quoteCategory });
