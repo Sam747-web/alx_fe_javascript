@@ -38,4 +38,6 @@ function addQuote() {
 }
 
 // Ensure the event listener is correctly attached
-document.getElementById("newQuote").addEventListener("click", displayRandomQuote);
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("newQuote").addEventListener("click", displayRandomQuote);
+});
