@@ -1,4 +1,4 @@
-// Initial quote database
+// Ensure the quotes array exists
 const quotes = [
     { text: "Believe you can and you're halfway there.", category: "Motivation" },
     { text: "Act as if what you do makes a difference. It does.", category: "Motivation" },
@@ -17,11 +17,7 @@ function displayRandomQuote() {
     document.getElementById("quoteDisplay").innerText = `"${quote.text}" - [${quote.category}]`;
 }
 
-// Ensure the button uses the correct function
-document.getElementById("newQuote").addEventListener("click", displayRandomQuote);
-}
-
-// Function to add a new quote dynamically
+// Function to add a new quote
 function addQuote() {
     const quoteText = document.getElementById("newQuoteText").value.trim();
     const quoteCategory = document.getElementById("newQuoteCategory").value.trim();
@@ -30,12 +26,6 @@ function addQuote() {
         alert("Please enter both a quote and a category.");
         return;
     }
-
-    quotes.push({ text: quoteText, category: quoteCategory });
-    document.getElementById("newQuoteText").value = "";
-    document.getElementById("newQuoteCategory").value = "";
-}
-
 
     // Add new quote to array
     quotes.push({ text: quoteText, category: quoteCategory });
@@ -47,5 +37,5 @@ function addQuote() {
     alert("New quote added successfully!");
 }
 
-// Event listener for button click
-document.getElementById("newQuote").addEventListener("click", showRandomQuote);
+// Ensure the event listener is correctly attached
+document.getElementById("newQuote").addEventListener("click", displayRandomQuote);
